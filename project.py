@@ -23,6 +23,7 @@ class Tetromino:
         self.type = randint(0, len(tetrominos) - 1)
         self.color = randint(1, len(COLORS) - 1) #can't have 0 because grid[x][y] = 0
         self.rotation = 0
+        
     def image(self):
         return tetrominos[self.type][self.rotation]
         
@@ -41,7 +42,7 @@ class Tetris:
         self.offset_x = (WIDTH - self.columns * self.cell_size) // 2
         self.offset_y = (HEIGHT - self.rows * self.cell_size) // 2
 
-    def new_figure(self):
+    def new_tetromino(self):
         self.tetromino = Tetromino(3, 0)    
     
     def draw_grid(self, screen):
@@ -84,7 +85,7 @@ class Tetris:
                 if i * 4 + j in self.tetromino.image():
                     self.grid[i + self.tetromino.y][j + self.tetromino.x] = self.tetromino.color
         self.clear_lines()
-        self.new_figure()
+        self.new_tetromino()
         if self.intersects():
             self.state = "gameover"
 
@@ -111,7 +112,41 @@ class Tetris:
 
     def update(self):
         if self.tetromino is None:
-            self.new_figure()
+            self.new_tetromino()
+
+
+class Button:
+    def __init__(self):
+        self.color = (40, 42, 54)
+        self.hover_color = (60, 62, 74)
+        self.text_color = (129,239,128)     
+        self.music_on = False
+        self.width = 120
+        self.height = 30
+        self.x = WIDTH - self.width - 10
+        self.y = 10
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.font = pygame.font.Font('Font.ttf', 30)
+
+    def draw_button(self, screen):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mouse_x, mouse_y):
+            pygame.draw.rect(screen, self.hover_color, self.rect)
+        else:
+            pygame.draw.rect(screen, self.color, self.rect)
+
+        music_status = 'On' if self.music_on else 'Off'
+        text = self.font.render(f'Music: {music_status}', True, self.text_color)
+        text_rect = text.get_rect(center=self.rect.center)
+        screen.blit(text, text_rect)
+
+    def toggle_music(self):
+        if self.music_on:
+            pygame.mixer.music.stop()  
+        else:
+            pygame.mixer.music.load('bgmusic.mp3')
+            pygame.mixer.music.play(-1)
+        self.music_on = not self.music_on
 
 
 def main():
@@ -121,7 +156,7 @@ def main():
     clock = pygame.time.Clock()
     running = True
     tetris = Tetris(20, 10)
-
+    button = Button()
 
     #text
     font = pygame.font.Font('Font.ttf', 50)
@@ -182,13 +217,15 @@ def main():
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                         tetris.__init__(20,10)
                         tetris.state = "start"
-           
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button.rect.collidepoint(event.pos):
+                    button.toggle_music()             
                           
         if tetris.state == "active":
             tetris.update()
             screen.fill("black")
             score = tetris.score
-            score_message = font.render(f'Score: {score}',False,(250,65,92))
+            score_message = font.render(f'Score: {score}',False,(129,239,128))
             score_message_rect = score_message.get_rect(center = (WIDTH // 2, 25))
             screen.blit(score_message,score_message_rect)
             tetris.draw_grid(screen)
@@ -214,7 +251,6 @@ def main():
             screen.blit(restart_message, restart_message_rect)
             
 
-        
         pygame.display.update()
         clock.tick(60)  
 
