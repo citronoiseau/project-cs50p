@@ -1,15 +1,17 @@
-from project import Tetromino, Tetris
-tetrominos = [
-        [[1, 5, 9, 13], [4, 5, 6, 7]],#I
-        [[1, 2, 5, 6]], #O
-        [[1, 4, 5, 6], [1, 4, 5, 9], [4, 5, 6, 9], [1, 5, 6, 9]], #T
-        [[1, 2, 6, 10], [5, 6, 7, 9], [2, 6, 10, 11], [3, 5, 6, 7]], #J
-        [[1, 2, 5, 9], [0, 4, 5, 6], [1, 5, 9, 8], [4, 5, 6, 10]], #L
-        [[6, 7, 9, 10], [1, 5, 6, 10]], #S
-        [[4, 5, 9, 10], [2, 6, 5, 9]], #Z
-    ]
+from project import Tetromino, Tetris, GameState
 
-COLORS = ["", "blue",  "green", "lightblue", "orange", "purple", "red"]
+tetrominos = [
+    [[1, 5, 9, 13], [4, 5, 6, 7]],  # I
+    [[1, 2, 5, 6]],  # O
+    [[1, 4, 5, 6], [1, 4, 5, 9], [4, 5, 6, 9], [1, 5, 6, 9]],  # T
+    [[1, 2, 6, 10], [5, 6, 7, 9], [2, 6, 10, 11], [3, 5, 6, 7]],  # J
+    [[1, 2, 5, 9], [0, 4, 5, 6], [1, 5, 9, 8], [4, 5, 6, 10]],  # L
+    [[6, 7, 9, 10], [1, 5, 6, 10]],  # S
+    [[4, 5, 9, 10], [2, 6, 5, 9]],  # Z
+]
+
+COLORS = ["", "blue", "green", "lightblue", "orange", "purple", "red"]
+
 
 def test_tetromino():
     tetromino = Tetromino(3, 0)
@@ -24,18 +26,19 @@ def test_tetromino():
     tetromino = Tetromino(3, 0)
     assert tetromino.image() in tetrominos[tetromino.type]
 
+
 def test_tetris():
     tetris = Tetris(20, 10)
     assert tetris.rows == 20
     assert tetris.columns == 10
-    assert tetris.state == "start"
+    assert tetris.state == GameState.START
     assert tetris.score == 0
     assert tetris.tetromino is None
-
 
     game = Tetris(20, 10)
     game.new_tetromino()
     assert isinstance(game.tetromino, Tetromino)
+
 
 def test_tetris_move_down():
     game = Tetris(20, 10)
@@ -43,6 +46,7 @@ def test_tetris_move_down():
     initial_y = game.tetromino.y
     game.move_down()
     assert game.tetromino.y == initial_y + 1 or game.state == "gameover"
+
 
 def test_tetris_intersects():
     game = Tetris(20, 10)
