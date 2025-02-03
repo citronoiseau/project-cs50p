@@ -33,23 +33,17 @@ def test_tetris():
     assert tetris.columns == 10
     assert tetris.state == GameState.START
     assert tetris.score == 0
-    assert tetris.tetromino is None
-
-    game = Tetris(20, 10)
-    game.new_tetromino()
-    assert isinstance(game.tetromino, Tetromino)
+    assert isinstance(tetris.tetromino[0], Tetromino)
 
 
 def test_tetris_move_down():
     game = Tetris(20, 10)
-    game.new_tetromino()
-    initial_y = game.tetromino.y
+    initial_y = game.tetromino[0].y
     game.move_down()
-    assert game.tetromino.y == initial_y + 1 or game.state == "gameover"
+    assert game.tetromino[0].y == initial_y + 1 or game.state == "gameover"
 
 
 def test_tetris_intersects():
     game = Tetris(20, 10)
-    game.new_tetromino()
-    game.tetromino.y = game.rows - 1
+    game.tetromino[0].y = game.rows - 1
     assert game.intersects() is True
