@@ -1,5 +1,5 @@
     # Pythis (Tetris in Python)
-    #### Video Demo:  [<URL HERE>](https://youtu.be/FUhEVPGTFEY)
+    #### Video Demo:  https://youtu.be/FUhEVPGTFEY
     #### Description:
     Project consists of two files, project.py and test_project.py
     ### project.py
