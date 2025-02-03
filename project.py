@@ -30,8 +30,7 @@ class Tetromino:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        # self.type = randint(0, len(tetrominos) - 1)
-        self.type = 3
+        self.type = randint(0, len(tetrominos) - 1)
         self.color = randint(1, len(COLORS) - 1)  # can't have 0 because grid[x][y] = 0
         self.rotation = 0
 
@@ -46,11 +45,10 @@ class Tetris:
     def __init__(self, rows, columns):
         self.rows = rows
         self.columns = columns
-        self.grid = [[0 for _ in range(columns)] for _ in range(rows)]
-
+        self.grid = [[0 for _ in range(self.columns)] for _ in range(self.rows)]
+        self.tetromino = [Tetromino(3, 0), Tetromino(3, 0)]
         self.state = GameState.START
         self.score = 0
-        self.tetromino = None
         self.speed = 500
         self.level = 1
         self.cell_size = 30
@@ -58,7 +56,8 @@ class Tetris:
         self.offset_y = (HEIGHT - self.rows * self.cell_size) // 2
 
     def new_tetromino(self):
-        self.tetromino = Tetromino(3, 0)
+        self.tetromino.pop(0)
+        self.tetromino.append(Tetromino(3, 0))
 
     def draw_grid(self, screen):
         for i in range(self.rows):
@@ -79,14 +78,14 @@ class Tetris:
                     screen.blit(color_image, (x, y))
 
     def draw_tetromino(self, screen):
-        if self.tetromino is not None:
+        if self.tetromino[0] is not None:
             for i in range(4):
                 for j in range(4):
-                    if i * 4 + j in self.tetromino.image():
-                        x = self.offset_x + (self.tetromino.x + j) * self.cell_size
-                        y = self.offset_y + (self.tetromino.y + i) * self.cell_size
+                    if i * 4 + j in self.tetromino[0].image():
+                        x = self.offset_x + (self.tetromino[0].x + j) * self.cell_size
+                        y = self.offset_y + (self.tetromino[0].y + i) * self.cell_size
                         color_image = pygame.image.load(
-                            f"graphics/{COLORS[self.tetromino.color]}.png"
+                            f"graphics/{COLORS[self.tetromino[0].color]}.png"
                         ).convert_alpha()
                         color_image = pygame.transform.scale(
                             color_image, (self.cell_size, self.cell_size)
@@ -96,12 +95,13 @@ class Tetris:
     def intersects(self):
         for i in range(4):
             for j in range(4):
-                if i * 4 + j in self.tetromino.image():
+                if i * 4 + j in self.tetromino[0].image():
                     if (
-                        i + self.tetromino.y > self.rows - 1
-                        or j + self.tetromino.x > self.columns - 1
-                        or j + self.tetromino.x < 0
-                        or self.grid[i + self.tetromino.y][j + self.tetromino.x] > 0
+                        i + self.tetromino[0].y > self.rows - 1
+                        or j + self.tetromino[0].x > self.columns - 1
+                        or j + self.tetromino[0].x < 0
+                        or self.grid[i + self.tetromino[0].y][j + self.tetromino[0].x]
+                        > 0
                     ):
                         return True
         return False
@@ -109,10 +109,10 @@ class Tetris:
     def stop(self):
         for i in range(4):
             for j in range(4):
-                if i * 4 + j in self.tetromino.image():
-                    self.grid[i + self.tetromino.y][
-                        j + self.tetromino.x
-                    ] = self.tetromino.color
+                if i * 4 + j in self.tetromino[0].image():
+                    self.grid[i + self.tetromino[0].y][j + self.tetromino[0].x] = (
+                        self.tetromino[0].color
+                    )
         self.clear_lines()
         self.new_tetromino()
         if self.intersects():
@@ -146,14 +146,10 @@ class Tetris:
             pygame.time.set_timer(tetromino_timer, self.speed)
 
     def move_down(self):
-        self.tetromino.y += 1
+        self.tetromino[0].y += 1
         if self.intersects():
-            self.tetromino.y -= 1
+            self.tetromino[0].y -= 1
             self.stop()
-
-    def update(self):
-        if self.tetromino is None:
-            self.new_tetromino()
 
 
 class Button:
@@ -191,6 +187,50 @@ class Button:
         self.music_on = not self.music_on
 
 
+class Next:
+    def __init__(self):
+        self.rows = 4
+        self.columns = 4
+        self.cell_size = 30
+        self.grid = [[0 for _ in range(self.columns)] for _ in range(self.rows)]
+        self.tetromino = None
+        self.offset_x = 20
+        self.offset_y = 300
+        self.font = pygame.font.Font("Font.ttf", 20)
+
+    def update_next(self, tetris):
+        self.tetromino = tetris.tetromino[1]
+        self.fill_grid()
+
+    def fill_grid(self):
+        self.grid = [[0 for _ in range(self.columns)] for _ in range(self.rows)]
+        for i in range(4):
+            for j in range(4):
+                if i * 4 + j in self.tetromino.image():
+                    self.grid[i][j] = self.tetromino.color
+
+    def draw_grid(self, screen):
+        next_message = self.font.render("Next piece:", False, (129, 239, 128))
+        next_message_rect = next_message.get_rect(center=(80, 280))
+        for i in range(self.rows):
+            for j in range(self.columns):
+                x = self.offset_x + j * self.cell_size
+                y = self.offset_y + i * self.cell_size
+                if self.grid[i][j] == 0:
+                    pygame.draw.rect(
+                        screen, (40, 42, 54), (x, y, self.cell_size, self.cell_size), 1
+                    )
+                else:
+                    color_image = pygame.image.load(
+                        f"graphics/{COLORS[self.grid[i][j]]}.png"
+                    ).convert_alpha()
+                    color_image = pygame.transform.scale(
+                        color_image, (self.cell_size, self.cell_size)
+                    )
+                    screen.blit(next_message, next_message_rect)
+                    screen.blit(color_image, (x, y))
+
+
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Tetris")
@@ -199,6 +239,7 @@ def main():
     running = True
     tetris = Tetris(20, 10)
     button = Button()
+    next_piece = Next()
 
     # text
     font = pygame.font.Font("Font.ttf", 50)
@@ -225,14 +266,13 @@ def main():
                 running = False
             if (
                 tetris.state == GameState.START
-                and event.type == pygame.KEYDOWN
+                and event.type == pygame.KEYUP
                 and event.key == pygame.K_SPACE
             ):
                 tetris.state = GameState.ACTIVE
                 pygame.time.set_timer(tetromino_timer, tetris.speed)
             if tetris.state == GameState.ACTIVE:
                 if event.type == tetromino_timer:
-                    print("timer")
                     tetris.move_down()
                 if event.type == pygame.KEYDOWN:
                     move_x = {
@@ -242,21 +282,21 @@ def main():
                         pygame.K_RIGHT: 1,
                     }
                     if event.key in move_x:
-                        previous = tetris.tetromino.x
-                        tetris.tetromino.x += move_x[event.key]
+                        previous = tetris.tetromino[0].x
+                        tetris.tetromino[0].x += move_x[event.key]
                         if tetris.intersects():
-                            tetris.tetromino.x = previous
+                            tetris.tetromino[0].x = previous
 
                     elif event.key in (pygame.K_w, pygame.K_UP):  # Rotate
-                        previous = tetris.tetromino.rotation
-                        tetris.tetromino.rotate()
+                        previous = tetris.tetromino[0].rotation
+                        tetris.tetromino[0].rotate()
                         if tetris.intersects():
-                            tetris.tetromino.rotation = previous
+                            tetris.tetromino[0].rotation = previous
 
-                    elif event.key == pygame.K_SPACE and tetris.tetromino:
+                    elif event.key == pygame.K_SPACE and tetris.tetromino[0]:
                         while not tetris.intersects():
-                            tetris.tetromino.y += 1
-                        tetris.tetromino.y -= 1
+                            tetris.tetromino[0].y += 1
+                        tetris.tetromino[0].y -= 1
                         tetris.stop()
 
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -273,7 +313,6 @@ def main():
                     button.toggle_music()
 
         if tetris.state == GameState.ACTIVE:
-            tetris.update()
             screen.fill((28, 28, 28))
             score = tetris.score
             level = tetris.level
@@ -288,6 +327,8 @@ def main():
 
             tetris.draw_grid(screen)
             tetris.draw_tetromino(screen)
+            next_piece.update_next(tetris)
+            next_piece.draw_grid(screen)
 
             pygame.display.flip()
 

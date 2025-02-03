@@ -1,3 +1,14 @@
 {
-  "cSpell.words": ["Tetris", "Tetromino", "tetrominos"]
+  "cSpell.words": [
+    "bgmusic",
+    "blit",
+    "collidepoint",
+    "GAMEOVER",
+    "Tetris",
+    "Tetromino",
+    "tetrominos"
+  ],
+  "python.testing.pytestArgs": ["."],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }
