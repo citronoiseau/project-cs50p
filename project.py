@@ -3,8 +3,8 @@ from enum import Enum
 from random import randint
 
 pygame.init()
-WIDTH = 500
-HEIGHT = 700
+WIDTH = 600
+HEIGHT = 800
 tetrominos = [
     [[1, 5, 9, 13], [4, 5, 6, 7]],  # I
     [[1, 2, 5, 6]],  # O
@@ -14,6 +14,8 @@ tetrominos = [
     [[6, 7, 9, 10], [1, 5, 6, 10]],  # S
     [[4, 5, 9, 10], [2, 6, 5, 9]],  # Z
 ]
+# timer for tetrominos speed
+tetromino_timer = pygame.USEREVENT + 1
 
 COLORS = ["", "blue", "green", "lightblue", "orange", "purple", "red"]
 
@@ -28,7 +30,8 @@ class Tetromino:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.type = randint(0, len(tetrominos) - 1)
+        # self.type = randint(0, len(tetrominos) - 1)
+        self.type = 1
         self.color = randint(1, len(COLORS) - 1)  # can't have 0 because grid[x][y] = 0
         self.rotation = 0
 
@@ -48,6 +51,8 @@ class Tetris:
         self.state = GameState.START
         self.score = 0
         self.tetromino = None
+        self.speed = 500
+        self.level = 1
         self.cell_size = 30
         self.offset_x = (WIDTH - self.columns * self.cell_size) // 2
         self.offset_y = (HEIGHT - self.rows * self.cell_size) // 2
@@ -127,6 +132,18 @@ class Tetris:
                     for j in range(self.columns):
                         self.grid[k][j] = self.grid[k - 1][j]
         self.score += lines_to_clear**2
+        self.update_speed()
+
+    def update_speed(self):
+        if self.score >= 20 and self.level == 1:
+            self.level += 1
+            self.speed = 300
+            pygame.time.set_timer(tetromino_timer, self.speed)
+
+        if self.score >= 40 and self.level == 2:
+            self.level += 1
+            self.speed = 100
+            pygame.time.set_timer(tetromino_timer, self.speed)
 
     def move_down(self):
         self.tetromino.y += 1
@@ -175,7 +192,7 @@ class Button:
 
 
 def main():
-    screen = pygame.display.set_mode((500, 700))
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Tetris")
 
     clock = pygame.time.Clock()
@@ -202,9 +219,6 @@ def main():
     restart_message = font.render("Press ESCAPE to restart", False, (250, 65, 92))
     restart_message_rect = restart_message.get_rect(center=(WIDTH // 2, 300))
 
-    # timer for tetrominos speed
-    tetromino_timer = pygame.USEREVENT + 1
-
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -215,9 +229,10 @@ def main():
                 and event.key == pygame.K_SPACE
             ):
                 tetris.state = GameState.ACTIVE
-                pygame.time.set_timer(tetromino_timer, 500)
+                pygame.time.set_timer(tetromino_timer, tetris.speed)
             if tetris.state == GameState.ACTIVE:
                 if event.type == tetromino_timer:
+                    print("timer")
                     tetris.move_down()
                 if event.type == pygame.KEYDOWN:
                     move_x = {
@@ -244,6 +259,10 @@ def main():
                         tetris.tetromino.y -= 1
                         tetris.stop()
 
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                        tetris.__init__(20, 10)
+                        tetris.state = GameState.START
+
             if tetris.state == GameState.GAMEOVER:
                 pygame.time.set_timer(tetromino_timer, 0)
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -255,11 +274,18 @@ def main():
 
         if tetris.state == GameState.ACTIVE:
             tetris.update()
-            screen.fill("black")
+            screen.fill((28, 28, 28))
             score = tetris.score
+            level = tetris.level
+
             score_message = font.render(f"Score: {score}", False, (129, 239, 128))
-            score_message_rect = score_message.get_rect(center=(WIDTH // 2, 25))
+            score_message_rect = score_message.get_rect(center=(WIDTH // 2, 50))
             screen.blit(score_message, score_message_rect)
+
+            level_message = font.render(f"Level: {level}", False, (129, 239, 128))
+            level_message_rect = score_message.get_rect(center=(WIDTH // 2, 750))
+            screen.blit(level_message, level_message_rect)
+
             tetris.draw_grid(screen)
             tetris.draw_tetromino(screen)
 
